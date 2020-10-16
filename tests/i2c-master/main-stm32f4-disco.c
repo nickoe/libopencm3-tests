@@ -30,8 +30,10 @@ struct hw_detail hw_details = {
 	.trigger_rcc = RCC_GPIOB,
 	.trigger_port = GPIOB,
 	.trigger_pin = GPIO13,
-	.i2c_clock_megahz = 42,
+	.i2c_clock_megahz = 16,
 };
+// HSI to 16MH< .i2c_clock_megahz = 16,
+// HSE to 168MHZ .i2c_clock_megahz = 42,
 // Not sure what the trigger pin is for, but I have MCP9804 on I2C1
 // with addresses: 0011000 and 0011001
 
@@ -80,7 +82,9 @@ int main(void)
 
 	while (1) {
     // LED blinks without i2c task
+    // with i2c task, led is not blinging, asuming it means i2c is stuck
 		//i2cm_task();
+    printf("Fisk");
 		gpio_toggle(LED_DISCO_GREEN_PORT, LED_DISCO_GREEN_PIN);
 		for (i = 0; i < 0x800000; i++) { /* Wait a bit. */
                         __asm__("NOP");
