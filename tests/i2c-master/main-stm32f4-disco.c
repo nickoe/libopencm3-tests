@@ -15,8 +15,8 @@
 #include "hw.h"
 #include "i2c-master.h"
 
-#define LED_DISCO_GREEN_PORT GPIOD
-#define LED_DISCO_GREEN_PIN GPIO12
+#define LED_DISCO_GREEN_PORT GPIOE
+#define LED_DISCO_GREEN_PIN GPIO0
 
 
 struct hw_detail hw_details = {
@@ -56,21 +56,28 @@ static void setup(void)
 	printf("hi guys!\n");
 	i2cm_hw_init();
 	i2cm_init();
+
+
+    // skypeater, disable PA, otherwise we get high temperatures over time...
+    rcc_periph_clock_enable(RCC_GPIOB);
+    gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO12);
+    gpio_clear(GPIOB, GPIO12);
 }
 
 
 int main(void)
 {
 	int i;
-	rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
+	rcc_clock_setup_pll(&rcc_hse_12mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
 	/* green led for ticking */
 	rcc_periph_clock_enable(RCC_GPIOD);
+	rcc_periph_clock_enable(RCC_GPIOE);
 	gpio_mode_setup(LED_DISCO_GREEN_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
 		LED_DISCO_GREEN_PIN);
 	setup();
 
 	while (1) {
-		i2cm_task();
+		//i2cm_task();
 		gpio_toggle(LED_DISCO_GREEN_PORT, LED_DISCO_GREEN_PIN);
 		for (i = 0; i < 0x800000; i++) { /* Wait a bit. */
                         __asm__("NOP");
