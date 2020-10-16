@@ -107,15 +107,27 @@ static void sht21_readid(void)
 		res2[3], res2[4], res[0], res[2], res[4], res[6], res2[0], res2[1]);
 }
 
+
+uint16_t mcu_read_reg(uint32_t i2c, uint8_t reg, uint8_t addr) {
+
+    uint8_t result[2];
+    i2c_transfer7(i2c, addr, &reg, 1, result, 2);
+
+    return (result[0] << 8) | result[1];
+}
+
+#define I2C_MCP9804_ADDR_A 0x18
+
 void i2cm_task(void)
 {
 	static int i = 1;
 	printf(">>>>Starting iteration %d\n", i++);
-	gpio_set(hw_details.trigger_port, hw_details.trigger_pin);
-	sht21_readid();
-	float temp = sht21_read_temp_hold(hw_details.periph);
-	float humi = sht21_read_humi_hold(hw_details.periph);
-	gpio_clear(hw_details.trigger_port, hw_details.trigger_pin);
-	printf("Temp: %f C, RH: %f\n", temp, humi);
-
+	//gpio_set(hw_details.trigger_port, hw_details.trigger_pin);
+	//sht21_readid();
+	//float temp = sht21_read_temp_hold(hw_details.periph);
+	//float humi = sht21_read_humi_hold(hw_details.periph);
+	//gpio_clear(hw_details.trigger_port, hw_details.trigger_pin);
+	//printf("Temp: %f C, RH: %f\n", temp, humi);
+  printf("Man id A is 0x%04X\r\n",
+           mcu_read_reg(I2C1, 0x06, I2C_MCP9804_ADDR_A));
 }

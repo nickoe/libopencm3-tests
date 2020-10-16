@@ -18,12 +18,13 @@
 #define LED_DISCO_GREEN_PORT GPIOE
 #define LED_DISCO_GREEN_PIN GPIO0
 
-
+// I2C1_SDA on PB7
+// I2C1_SCL on PB8
 struct hw_detail hw_details = {
 	.periph = I2C1,
 	.periph_rcc = RCC_I2C1,
 	.periph_rst = RST_I2C1,
-	.pins = GPIO8 | GPIO9, /* our external i2c device on I2c1 */
+	.pins = GPIO8 | GPIO7, /* our external i2c device on I2c1 */
 	.port = GPIOB,
 	.port_rcc = RCC_GPIOB,
 	.trigger_rcc = RCC_GPIOB,
@@ -31,7 +32,8 @@ struct hw_detail hw_details = {
 	.trigger_pin = GPIO13,
 	.i2c_clock_megahz = 42,
 };
-
+// Not sure what the trigger pin is for, but I have MCP9804 on I2C1
+// with addresses: 0011000 and 0011001
 
 /* provided in board files please*/
 /**
@@ -77,7 +79,8 @@ int main(void)
 	setup();
 
 	while (1) {
-		//i2cm_task();
+    // LED blinks without i2c task
+		i2cm_task();
 		gpio_toggle(LED_DISCO_GREEN_PORT, LED_DISCO_GREEN_PIN);
 		for (i = 0; i < 0x800000; i++) { /* Wait a bit. */
                         __asm__("NOP");
