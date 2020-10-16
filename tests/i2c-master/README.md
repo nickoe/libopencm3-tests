@@ -29,3 +29,6 @@ $ sigrok-cli -d fx2lafw -C D0=SDA,D1=SCL,D2=Trig -c samplerate=4Mhz:captureratio
 
 # or....
 $ sigrok-cli -d fx2lafw -C D0=SDA,D1=SCL,D2=Trig -c samplerate=4Mhz:captureratio=4 --time=150ms  -t Trig=r -P i2c:scl=SCL:sda=SDA
+
+Use:
+make clean all && openocd -f /home/nickoe/aausat6/software/samples/aausat_jtagkey_swd_new.cfg -f interface/ftdi/swd-resistor-hack.cfg -c "reset_config srst_only connect_assert_srst" -f "target/stm32f4x.cfg" -c "adapter speed 100" -c "program i2c-master-stm32f4-disco.elf verify reset exit"
