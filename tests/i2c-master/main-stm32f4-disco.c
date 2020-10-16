@@ -50,7 +50,7 @@ static void i2cm_hw_init(void)
 
 	/* i2c control lines */
 	rcc_periph_clock_enable(hw_details.port_rcc);
-	gpio_mode_setup(hw_details.port, GPIO_MODE_AF, GPIO_PUPD_NONE, hw_details.pins);
+	gpio_mode_setup(hw_details.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, hw_details.pins);
 	gpio_set_output_options(hw_details.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, hw_details.pins);
 	gpio_set_af(hw_details.port, GPIO_AF4, hw_details.pins);
 }
@@ -83,7 +83,7 @@ int main(void)
 	while (1) {
     // LED blinks without i2c task
     // with i2c task, led is not blinging, asuming it means i2c is stuck
-		//i2cm_task();
+		i2cm_task();
     printf("Fisk");
 		gpio_toggle(LED_DISCO_GREEN_PORT, LED_DISCO_GREEN_PIN);
 		for (i = 0; i < 0x800000; i++) { /* Wait a bit. */
