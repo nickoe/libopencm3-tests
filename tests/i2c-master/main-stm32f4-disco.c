@@ -30,7 +30,7 @@ struct hw_detail hw_details = {
 	.trigger_rcc = RCC_GPIOB,
 	.trigger_port = GPIOB,
 	.trigger_pin = GPIO13,
-	.i2c_clock_megahz = 16,
+	.i2c_clock_megahz = 42,
 };
 // HSI to 16MH< .i2c_clock_megahz = 16,
 // HSE to 168MHZ .i2c_clock_megahz = 42,
@@ -72,7 +72,7 @@ static void setup(void)
 int main(void)
 {
 	int i;
-	//rcc_clock_setup_pll(&rcc_hse_12mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
+	rcc_clock_setup_pll(&rcc_hse_12mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
 	/* green led for ticking */
 	rcc_periph_clock_enable(RCC_GPIOD);
 	rcc_periph_clock_enable(RCC_GPIOE);
