@@ -9,6 +9,7 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/i2c.h>
 #include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/usart.h>
 
 #include "trace.h"
 
@@ -50,9 +51,27 @@ static void i2cm_hw_init(void)
 
 	/* i2c control lines */
 	rcc_periph_clock_enable(hw_details.port_rcc);
-	gpio_mode_setup(hw_details.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, hw_details.pins);
-	gpio_set_output_options(hw_details.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, hw_details.pins);
+	//gpio_mode_setup(hw_details.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, hw_details.pins);
+	//gpio_set_output_options(hw_details.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHiZ, hw_details.pins);
+  gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO7);
+  gpio_set_output_options(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, GPIO7);
+	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO8);
+  gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO8);
 	gpio_set_af(hw_details.port, GPIO_AF4, hw_details.pins);
+}
+
+static void usart_setup(void)
+{
+	/* Setup UART parameters. */
+	usart_set_baudrate(UART4, 115200);
+	usart_set_databits(UART4, 8);
+	usart_set_stopbits(UART4, USART_STOPBITS_1);
+	usart_set_mode(UART4, USART_MODE_TX);
+	usart_set_parity(UART4, USART_PARITY_NONE);
+	usart_set_flow_control(UART4, USART_FLOWCONTROL_NONE);
+
+	/* Finally enable the USART. */
+	usart_enable(UART4);
 }
 
 static void setup(void)
@@ -62,16 +81,28 @@ static void setup(void)
 	i2cm_init();
 
 
-    // skypeater, disable PA, otherwise we get high temperatures over time...
-    rcc_periph_clock_enable(RCC_GPIOB);
-    gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO12);
-    gpio_clear(GPIOB, GPIO12);
+	// skypeater, disable PA, otherwise we get high temperatures over time...
+	rcc_periph_clock_enable(RCC_GPIOB);
+	gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO12);
+	gpio_clear(GPIOB, GPIO12);
+
+	rcc_periph_clock_enable(RCC_GPIOC);
+	// Enable UART TX
+	gpio_mode_setup(GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO10);
+	gpio_set_af(GPIOC, GPIO_AF8, GPIO10);
+	// Enable UART RX
+	gpio_mode_setup(GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11);
+	gpio_set_af(GPIOC, GPIO_AF8, GPIO11);
+
+	rcc_periph_clock_enable(RCC_UART4);
+	usart_setup();
 }
 
 
 int main(void)
 {
 	int i;
+	int j = 0, c = 0;
 	rcc_clock_setup_pll(&rcc_hse_12mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
 	/* green led for ticking */
 	rcc_periph_clock_enable(RCC_GPIOD);
@@ -79,13 +110,21 @@ int main(void)
 	gpio_mode_setup(LED_DISCO_GREEN_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
 		LED_DISCO_GREEN_PIN);
 	setup();
-
 	while (1) {
     // LED blinks without i2c task
     // with i2c task, led is not blinging, asuming it means i2c is stuck
 		i2cm_task();
     printf("Fisk");
 		gpio_toggle(LED_DISCO_GREEN_PORT, LED_DISCO_GREEN_PIN);
+
+
+		usart_send_blocking(UART4, c + '0'); /* UART4: Send byte. */
+		c = (c == 9) ? 0 : c + 1;	/* Increment c. */
+		if ((j++ % 80) == 0) {		/* Newline after line full. */
+			usart_send_blocking(UART4, '\r');
+			usart_send_blocking(UART4, '\n');
+		}
+
 		for (i = 0; i < 0x800000; i++) { /* Wait a bit. */
                         __asm__("NOP");
                 }
