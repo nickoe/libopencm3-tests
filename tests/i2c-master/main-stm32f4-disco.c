@@ -4,6 +4,8 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
+
 #include <unistd.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/gpio.h>
@@ -19,6 +21,27 @@
 #define LED_DISCO_GREEN_PORT GPIOE
 #define LED_DISCO_GREEN_PIN GPIO0
 
+#if 1
+int _write(int fd, char *ptr, int len);
+
+int _write(int file, char *ptr, int len)
+{
+	int i;
+
+	if (file == STDOUT_FILENO || file == STDERR_FILENO) {
+		for (i = 0; i < len; i++) {
+			if (ptr[i] == '\n') {
+				usart_send_blocking(UART4, '\r');
+				//usart_send_blocking(UART4, '\n');
+			}
+			usart_send_blocking(UART4, ptr[i]);
+		}
+		return i;
+	}
+	errno = EIO;
+	return -1;
+}
+#endif
 // I2C1_SDA on PB7
 // I2C1_SCL on PB8
 struct hw_detail hw_details = {
@@ -94,8 +117,6 @@ static void setup(void)
 	gpio_mode_setup(GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11);
 	gpio_set_af(GPIOC, GPIO_AF8, GPIO11);
 
-	rcc_periph_clock_enable(RCC_UART4);
-	usart_setup();
 }
 
 
@@ -104,6 +125,8 @@ int main(void)
 	int i;
 	int j = 0, c = 0;
 	rcc_clock_setup_pll(&rcc_hse_12mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
+	rcc_periph_clock_enable(RCC_UART4);
+	usart_setup();
 	/* green led for ticking */
 	rcc_periph_clock_enable(RCC_GPIOD);
 	rcc_periph_clock_enable(RCC_GPIOE);
@@ -114,16 +137,16 @@ int main(void)
     // LED blinks without i2c task
     // with i2c task, led is not blinging, asuming it means i2c is stuck
 		i2cm_task();
-    printf("Fisk");
 		gpio_toggle(LED_DISCO_GREEN_PORT, LED_DISCO_GREEN_PIN);
 
-
+#if 0
 		usart_send_blocking(UART4, c + '0'); /* UART4: Send byte. */
 		c = (c == 9) ? 0 : c + 1;	/* Increment c. */
 		if ((j++ % 80) == 0) {		/* Newline after line full. */
 			usart_send_blocking(UART4, '\r');
 			usart_send_blocking(UART4, '\n');
 		}
+#endif
 
 		for (i = 0; i < 0x800000; i++) { /* Wait a bit. */
                         __asm__("NOP");
