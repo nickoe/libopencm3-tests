@@ -23,7 +23,7 @@ SHARED_DIR = ../../shared
 
 CFILES = main-$(BOARD).c
 CFILES += i2c-master.c
-CFILES += trace.c trace_stdio.c
+#CFILES += trace.c trace_stdio.c
 
 VPATH += $(SHARED_DIR)
 
@@ -32,7 +32,8 @@ INCLUDES += $(patsubst %,-I%, . $(SHARED_DIR))
 OPENCM3_DIR=../../libopencm3/
 
 ### This section can go to an arch shared rules eventually...
-DEVICE=stm32f405xg
+#DEVICE=stm32f405xg
+DEVICE=stm32f407vg
 #OOCD_INTERFACE = stlink-v2
 #OOCD_TARGET = stm32f4x
 OOCD_FILE = ../../openocd/openocd.stm32f4-disco.cfg

@@ -107,15 +107,50 @@ static void sht21_readid(void)
 		res2[3], res2[4], res[0], res[2], res[4], res[6], res2[0], res2[1]);
 }
 
+
+uint16_t mcu_read_reg(uint32_t i2c, uint8_t reg, uint8_t addr) {
+
+    uint8_t result[2];
+    i2c_transfer7(i2c, addr, &reg, 1, result, 2);
+
+    return (result[0] << 8) | result[1];
+}
+
+float mcu_read_temperature(uint32_t i2c, uint8_t addr) {
+    float temperature;
+    uint8_t reg = 0x05;
+    uint8_t result[2];
+    i2c_transfer7(i2c, addr, &reg, 1, result, 2);
+
+    /* Clear flags */
+    result[0] &= 0x1F;
+    if ((result[0] & 0x10)) {
+        result[0] &= 0x0F;
+        temperature =
+            (float)256 - ((float)result[0] * 16 + (float)result[1] / 16);
+        temperature *= -1;
+    } else {
+        temperature = ((float)result[0] * 16 + (float)result[1] / 16);
+    }
+
+    return temperature;
+}
+
+
+#define I2C_MCP9804_ADDR_A 0x18
+
 void i2cm_task(void)
 {
 	static int i = 1;
 	printf(">>>>Starting iteration %d\n", i++);
-	gpio_set(hw_details.trigger_port, hw_details.trigger_pin);
-	sht21_readid();
-	float temp = sht21_read_temp_hold(hw_details.periph);
-	float humi = sht21_read_humi_hold(hw_details.periph);
-	gpio_clear(hw_details.trigger_port, hw_details.trigger_pin);
-	printf("Temp: %f C, RH: %f\n", temp, humi);
-
+	//gpio_set(hw_details.trigger_port, hw_details.trigger_pin);
+	//sht21_readid();
+	//float temp = sht21_read_temp_hold(hw_details.periph);
+	//float humi = sht21_read_humi_hold(hw_details.periph);
+	//gpio_clear(hw_details.trigger_port, hw_details.trigger_pin);
+	//printf("Temp: %f C, RH: %f\n", temp, humi);
+  printf("Man id A is 0x%04X\r\n",
+           mcu_read_reg(I2C1, 0x06, I2C_MCP9804_ADDR_A));
+  float tempa = mcu_read_temperature(I2C1, I2C_MCP9804_ADDR_A);
+  printf("Temperature A is %f\n", tempa);
 }
